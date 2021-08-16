@@ -1,0 +1,140 @@
+import java.lang.reflect.Executable
+
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+}
+
+
+public class SwaggerCodegenTask extends DefaultTask {
+
+    private String path
+    private String language
+
+    // The language, "java" or "kotlin"
+    @Option(option = "language", description = "The language (java or kotlin).")
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    // Path to the main repo
+    @Option(option = "path", description = "The path to the main repo.")
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    @TaskAction
+    public void generate() {
+
+        // Create a new template engine
+        def engine = new groovy.text.SimpleTemplateEngine()
+
+        // Create the path to the src folder of the go workspace
+        def goSrcText = '${insertPath}/go/src'
+        def pathBinding = ["insertPath":path]
+        def goPathTemplate = engine.createTemplate(goSrcText).make(pathBinding)
+        def goSrcPath = goPathTemplate.toString()
+
+        // Generate path to the protos folder
+        def protoText = '${insertPath}/protos/com/carbonhealth'
+        def protoBinding = ["insertPath":path]
+        def protoTemplate = engine.createTemplate(protoText).make(protoBinding)
+        def protoPath = protoTemplate.toString()
+
+        // Generated output path for kotlin
+        def kotlinGenerateText = '${insertDirPath}/generated/kotlin'
+        def kotlinGenerateBinding = ["insertDirPath":project.projectDir.path]
+        def kotlinGenerateTemplate = engine.createTemplate(kotlinGenerateText).make(kotlinGenerateBinding)
+        def kotlinGeneratePath = kotlinGenerateTemplate.toString()
+
+        // Generated output path for kotlin
+        def javaGenerateText = '${insertDirPath}/generated/java'
+        def javaGenerateBinding = ["insertDirPath":project.projectDir.path]
+        def javaGenerateTemplate = engine.createTemplate(javaGenerateText).make(javaGenerateBinding)
+        def javaGeneratePath = javaGenerateTemplate.toString()
+
+
+        // Path to the generated swagger file
+        def jsonPath = './go/src/generated/apidocs.swagger.json'
+
+        // Gradle somehow confuses "path" with other keywords inside project.exec
+        // Just a name change for project.exec
+        def mainPath = path;
+
+        // Generate the swagger file (OpenAPI) first
+        project.exec {
+            workingDir(goSrcPath)
+
+            // We will use a list to add all the necessary arguments
+            List<String> arguments = new ArrayList<>()
+
+            arguments.add('cmd');
+            arguments.add('/c');
+            arguments.add('protoc');
+            arguments.add('-I');
+            arguments.add('.');
+            arguments.add('--openapiv2_out');
+            arguments.add('./generated');
+            arguments.add('--openapiv2_opt');
+            arguments.add('logtostderr=true');
+            arguments.add('--openapiv2_opt');
+            arguments.add('allow_merge=true');
+            arguments.add('--proto_path');
+            arguments.add('../../protos/com/carbonhealth');
+
+            // Pick all the .proto files
+            FileTree tree = project.fileTree(protoPath).include('**/*.proto')
+
+            // Add them to the arguments list
+            tree.each {aFile ->
+                arguments.add(aFile.name)
+            }
+
+            // Call the command
+            commandLine(arguments)
+
+            // The following wont be used since we need to add each proto file to arguments array
+            //commandLine('cmd', '/c', 'protoc', '-I', '.', '--openapiv2_out', './generated', '--openapiv2_opt', 'logtostderr=true', '--openapiv2_opt', 'allow_merge=true', '--proto_path', '.', 'secondService.proto', 'service.proto')
+            //println(getArgs().toString())
+        }
+
+
+        // If the language is kotlin
+        if ( language.toLowerCase() == "kotlin" ) {
+             project.exec {
+                workingDir(mainPath)
+
+                commandLine('cmd', '/c', 'java', '-jar', './go/swagger-codegen-cli.jar', 'generate', '-i', jsonPath, '-l', 'kotlin-armeria', '-o', kotlinGeneratePath)
+             }
+             println('\n Kotlin-Armeria server is succesfully generated!')
+        }
+
+
+        // If the language is java
+        else if ( language.toLowerCase() == "java" ) {
+            project.exec {
+                workingDir(mainPath)
+
+                commandLine('cmd', '/c', 'java', '-jar', './go/swagger-codegen-cli.jar', 'generate', '-i', jsonPath, '-l', 'java-armeria', '-o', javaGeneratePath)
+            }
+            println('\n Java-Armeria server is succesfully generated!')
+        }
+
+        else {
+            println('Select "java" or "kotlin" as --language')
+        }
+    }
+}
+
+tasks.register("generate", SwaggerCodegenTask)

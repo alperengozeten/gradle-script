@@ -1,0 +1,37 @@
+plugins {
+    id 'java'
+}
+
+group 'io.swagger'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Adjust the list as you need.
+    ['armeria',
+    'armeria-brave',
+    'armeria-grpc',
+    'armeria-jetty9',
+    'armeria-kafka',
+    'armeria-logback',
+    'armeria-retrofit2',
+    'armeria-rxjava3',
+    'armeria-saml',
+    'armeria-thrift0.13',
+    'armeria-tomcat9',
+    'armeria-zookeeper3'].each {
+    implementation "com.linecorp.armeria:${it}:1.9.2"
+    }
+
+    implementation 'io.swagger:swagger-annotations:1.6.2'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.12.4'
+    implementation group: 'com.github.joschi.jackson', name: 'jackson-datatype-threetenbp', version: '2.12.2'
+
+
+    // Logging
+    runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+    runtimeOnly 'org.slf4j:log4j-over-slf4j:1.7.31'
+}
