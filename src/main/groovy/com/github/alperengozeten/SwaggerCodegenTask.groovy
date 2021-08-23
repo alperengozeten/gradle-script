@@ -1,30 +1,12 @@
-plugins {
-    id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
-    id 'java-gradle-plugin'
-    id 'groovy'
-    id 'maven-publish'
-}
+package com.github.alperengozeten
 
-group 'com.github.alperengozeten.generate'
-version '1.0-SNAPSHOT'
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
-
-configurations {
-    tool
-}
-
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    api ("com.github.alperengozeten.codegen:armeriacodegen:1.0-SNAPSHOT")
-    tool ("com.github.alperengozeten.codegen:armeriacodegen:1.0-SNAPSHOT")
-}
+import io.swagger.codegen.SwaggerCodegen
+import org.gradle.api.DefaultTask
+import org.gradle.api.Project
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
 
 public class SwaggerCodegenTask extends DefaultTask {
 
@@ -32,6 +14,9 @@ public class SwaggerCodegenTask extends DefaultTask {
     private String path
     private String language
     private String outputPath
+
+    @Input
+    Project project
 
     // The language, "java" or "kotlin"
     @Option(option = "language", description = "The language (java or kotlin).")
@@ -69,31 +54,14 @@ public class SwaggerCodegenTask extends DefaultTask {
         def protoTemplate = engine.createTemplate(protoText).make(protoBinding)
         def protoPath = protoTemplate.toString()
 
-        /**
-
-         // Generated output path for kotlin
-         def kotlinGenerateText = '${insertDirPath}/generated/kotlin'
-         def kotlinGenerateBinding = ["insertDirPath":project.projectDir.path]
-         def kotlinGenerateTemplate = engine.createTemplate(kotlinGenerateText).make(kotlinGenerateBinding)
-         def kotlinGeneratePath = kotlinGenerateTemplate.toString()
-
-         // Generated output path for kotlin
-         def javaGenerateText = '${insertDirPath}/generated/java'
-         def javaGenerateBinding = ["insertDirPath":project.projectDir.path]
-         def javaGenerateTemplate = engine.createTemplate(javaGenerateText).make(javaGenerateBinding)
-         def javaGeneratePath = javaGenerateTemplate.toString()
-         */
-
         // Path to the generated swagger file
-        def jsonPath = './go/src/generated/apidocs.swagger.json'
-
-        // Gradle somehow confuses "path" with other keywords inside project.exec
-        // Just a name change for project.exec
-        def mainPath = path;
+        def jsonText = '${insertPath}/go/src/generated/apidocs.swagger.json'
+        def jsonBinding = ["insertPath":path]
+        def jsonTemplate = engine.createTemplate(jsonText).make(jsonBinding)
+        def jsonPath = jsonTemplate.toString()
 
         // project.exec does not recognize the outputPath which is defined outside of this method
         def outputFolderPath = outputPath
-
 
         // Generate the swagger file (OpenAPI) first
         project.exec {
@@ -122,7 +90,7 @@ public class SwaggerCodegenTask extends DefaultTask {
             FileTree tree = project.fileTree(protoPath).include('**/com/carbonhealth/**')
 
             // Add them to the arguments list
-            tree.each {aFile ->
+            tree.each { aFile ->
 
                 String pathProto = protoPath;
 
@@ -132,8 +100,8 @@ public class SwaggerCodegenTask extends DefaultTask {
                 int length = sb.length()
 
                 // Convert the back-slashes to slashes
-                for ( int i = 0; i < length; i++ ) {
-                    if ( sb.charAt(i) == '\\' as char ) {
+                for (int i = 0; i < length; i++) {
+                    if (sb.charAt(i) == '\\' as char) {
                         sb.setCharAt(i, '/' as char)
                     }
                 }
@@ -143,59 +111,29 @@ public class SwaggerCodegenTask extends DefaultTask {
 
             // Call the command
             commandLine(arguments)
-
-            // The following wont be used since we need to add each proto file to arguments array
-            //commandLine('cmd', '/c', 'protoc', '-I', '.', '--openapiv2_out', './generated', '--openapiv2_opt', 'logtostderr=true', '--openapiv2_opt', 'allow_merge=true', '--proto_path', '.', 'secondService.proto', 'service.proto')
-            //println(getArgs().toString())
         }
-
-        /**
+        
         // If the language is kotlin
         if ( language.toLowerCase() == "kotlin" ) {
-            project.exec {
-                workingDir(mainPath)
 
-                commandLine('cmd', '/c', 'java', '-jar', './go/swagger-codegen-cli.jar', 'generate', '-i', jsonPath, '-l', 'kotlin-armeria', '-o', outputFolderPath)
-            }
+            // Call the Swagger-Codegen
+            String[] argumentsForMain = ["generate", "-i", jsonPath , "-l", "kotlin-armeria", "-o", outputFolderPath]
+            SwaggerCodegen.main(argumentsForMain)
             println('\n Kotlin-Armeria server is succesfully generated!')
         }
 
 
         // If the language is java
         else if ( language.toLowerCase() == "java" ) {
-            project.exec {
-                workingDir(mainPath)
 
-                commandLine('cmd', '/c', 'java', '-jar', './go/swagger-codegen-cli.jar', 'generate', '-i', jsonPath, '-l', 'java-armeria', '-o', outputFolderPath)
-            }
+            // Call the Swagger-Codegen
+            String[] argumentsForMain = ["generate", "-i", jsonPath , "-l", "java-armeria", "-o", outputFolderPath]
+            SwaggerCodegen.main(argumentsForMain)
             println('\n Java-Armeria server is succesfully generated!')
         }
 
         else {
             println('Select "java" or "kotlin" as --language')
         }
-         */
     }
 }
-
-public class GeneratePlugin implements Plugin<Project> {
-    @Override
-    public void apply(Project project) {
-
-        project.tasks.register("generate", SwaggerCodegenTask)
-    }
-}
-
-apply plugin : GeneratePlugin
-
-
-gradlePlugin {
-    plugins {
-        generatePlugin {
-            id = 'com.github.alperengozeten.generate'
-            implementationClass = 'com.github.alperengozeten.GeneratePlugin'
-        }
-    }
-}
-
-//tasks.register("generate", SwaggerCodegenTask)

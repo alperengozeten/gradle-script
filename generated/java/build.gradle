@@ -1,5 +1,5 @@
 plugins {
-    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
 }
 
 group 'io.swagger'
@@ -12,6 +12,7 @@ repositories {
 dependencies {
     // Adjust the list as you need.
     ['armeria',
+    'armeria-kotlin',
     'armeria-brave',
     'armeria-grpc',
     'armeria-jetty9',
@@ -26,6 +27,7 @@ dependencies {
     implementation "com.linecorp.armeria:${it}:1.9.2"
     }
 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation 'io.swagger:swagger-annotations:1.6.2'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.12.4'
     implementation group: 'com.github.joschi.jackson', name: 'jackson-datatype-threetenbp', version: '2.12.2'
@@ -34,4 +36,9 @@ dependencies {
     // Logging
     runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
     runtimeOnly 'org.slf4j:log4j-over-slf4j:1.7.31'
+}
+
+// Needed because calls to static methods in Java interfaces are prohibited in JVM target 1.6. Compile with '-jvm-target 1.8'
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
 }

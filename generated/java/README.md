@@ -1,2 +1,2 @@
-This is your new Java Armeria Application.
+This is your new Kotlin Armeria Application.
 =================================
