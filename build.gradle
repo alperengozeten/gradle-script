@@ -6,7 +6,7 @@ plugins {
     id 'maven-publish'
 }
 
-group 'com.github.alperengozeten.generate'
+group 'com.carbonhealth.foundations'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -192,7 +192,7 @@ apply plugin : GeneratePlugin
 gradlePlugin {
     plugins {
         generatePlugin {
-            id = 'com.github.alperengozeten.generate'
+            id = 'com.carbonhealth.foundations.generate'
             implementationClass = 'com.carbonhealth.foundations.GeneratePlugin'
         }
     }
