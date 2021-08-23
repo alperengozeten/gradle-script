@@ -22,8 +22,8 @@ configurations {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    api ("com.github.alperengozeten.codegen:armeriacodegen:1.0-SNAPSHOT")
-    tool ("com.github.alperengozeten.codegen:armeriacodegen:1.0-SNAPSHOT")
+    api ("com.carbonhealth.foundations:armeriacodegen:1.0-SNAPSHOT")
+    tool ("com.carbonhealth.foundations:armeriacodegen:1.0-SNAPSHOT")
 }
 
 public class SwaggerCodegenTask extends DefaultTask {
@@ -193,7 +193,7 @@ gradlePlugin {
     plugins {
         generatePlugin {
             id = 'com.github.alperengozeten.generate'
-            implementationClass = 'com.github.alperengozeten.GeneratePlugin'
+            implementationClass = 'com.carbonhealth.foundations.GeneratePlugin'
         }
     }
 }

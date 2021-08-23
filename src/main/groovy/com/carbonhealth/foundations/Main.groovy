@@ -1,4 +1,4 @@
-package com.github.alperengozeten
+package com.carbonhealth.foundations
 
 import io.swagger.codegen.SwaggerCodegen
 
