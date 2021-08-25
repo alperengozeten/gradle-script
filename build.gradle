@@ -94,10 +94,22 @@ public class SwaggerCodegenTask extends DefaultTask {
         // project.exec does not recognize the outputPath which is defined outside of this method
         def outputFolderPath = outputPath
 
+        // Path to the "generated" folder inside go/src to store .swagger file
+        def generateFolderText = '${insertPath}/go/src/generated'
+        def generateFolderBinding = ["insertPath":path]
+        def generateFolderTemplate = engine.createTemplate(generateFolderText).make(generateFolderBinding)
+        def generateFolderPath = generateFolderTemplate.toString()
+
 
         // Generate the swagger file (OpenAPI) first
         project.exec {
             workingDir(goSrcPath)
+
+            def generateFolder = new File(generateFolderPath)
+
+            if ( !generateFolder.exists() ) {
+                generateFolder.mkdirs()
+            }
 
             // We will use a list to add all the necessary arguments
             List<String> arguments = new ArrayList<>()

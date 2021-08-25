@@ -60,6 +60,19 @@ public class SwaggerCodegenTask extends DefaultTask {
         def jsonTemplate = engine.createTemplate(jsonText).make(jsonBinding)
         def jsonPath = jsonTemplate.toString()
 
+        // Path to the "generated" folder inside go/src to store .swagger file
+        def generateFolderText = '${insertPath}/go/src/generated'
+        def generateFolderBinding = ["insertPath":path]
+        def generateFolderTemplate = engine.createTemplate(generateFolderText).make(generateFolderBinding)
+        def generateFolderPath = generateFolderTemplate.toString()
+
+        // This file is to store the swagger files
+        def generateFolder = new File(generateFolderPath)
+
+        if ( !generateFolder.exists() ) {
+            generateFolder.mkdirs()
+        }
+
         // project.exec does not recognize the outputPath which is defined outside of this method
         def outputFolderPath = outputPath
 
@@ -70,6 +83,7 @@ public class SwaggerCodegenTask extends DefaultTask {
             // We will use a list to add all the necessary arguments
             List<String> arguments = new ArrayList<>()
 
+            // MIGHT NOT WORK FOR MAC OS BECAUSE OF /c
             arguments.add('cmd');
             arguments.add('/c');
             arguments.add('protoc');
