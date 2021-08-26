@@ -26,6 +26,7 @@ dependencies {
     tool ("com.carbonhealth.foundations:armeriacodegen:1.0-SNAPSHOT")
 }
 
+// THIS CLASS IS NOT IN USE!!! Only for testing purposes
 public class SwaggerCodegenTask extends DefaultTask {
 
     // Options
@@ -100,10 +101,9 @@ public class SwaggerCodegenTask extends DefaultTask {
         def generateFolderTemplate = engine.createTemplate(generateFolderText).make(generateFolderBinding)
         def generateFolderPath = generateFolderTemplate.toString()
 
-
         // Generate the swagger file (OpenAPI) first
         project.exec {
-            workingDir(goSrcPath)
+            workingDir('src/main/resources')
 
             def generateFolder = new File(generateFolderPath)
 
@@ -116,9 +116,9 @@ public class SwaggerCodegenTask extends DefaultTask {
 
             arguments.add('cmd');
             arguments.add('/c');
-            arguments.add('protoc');
+            arguments.add('protoc.exe');
             arguments.add('--openapiv2_out');
-            arguments.add('./generated');
+            arguments.add('C:/Users/HP/go/src/generated');
             arguments.add('--openapiv2_opt');
             arguments.add('logtostderr=true');
             arguments.add('--openapiv2_opt');
@@ -128,7 +128,7 @@ public class SwaggerCodegenTask extends DefaultTask {
             arguments.add('--openapiv2_opt');
             arguments.add('include_package_in_tags=true')
             arguments.add('--proto_path');
-            arguments.add('../../protos');
+            arguments.add('C:/Users/HP/protos');
 
             // Pick all the .proto files under the com/carbonhealth directory
             FileTree tree = project.fileTree(protoPath).include('**/com/carbonhealth/**')

@@ -14,6 +14,7 @@ public class SwaggerCodegenTask extends DefaultTask {
     private String path
     private String language
     private String outputPath
+    private Boolean generateUnboundMethods
 
     @Input
     Project project
@@ -25,7 +26,7 @@ public class SwaggerCodegenTask extends DefaultTask {
     }
 
     // Path to the main repo
-    @Option(option = "path", description = "The path to the main repo.")
+    @Option(option = "protos_path", description = "The path to the protos folder (including the folder name).")
     public void setPath(String path) {
         this.path = path;
     }
@@ -36,32 +37,32 @@ public class SwaggerCodegenTask extends DefaultTask {
         this.outputPath = outputPath;
     }
 
+    // If provided, then generates the definitions for methods without HTTP annotations as well
+    @Option(option = "generate_unbound_methods", description = "Whether to generate methods with no HTTP annotations or not")
+    public void setGenerateUnboundMethods(Boolean generateUnboundMethods) {
+        this.generateUnboundMethods = generateUnboundMethods;
+    }
+
     @TaskAction
     public void generate() {
 
         // Create a new template engine
         def engine = new groovy.text.SimpleTemplateEngine()
 
-        // Create the path to the src folder of the go workspace
-        def goSrcText = '${insertPath}/go/src'
-        def pathBinding = ["insertPath":path]
-        def goPathTemplate = engine.createTemplate(goSrcText).make(pathBinding)
-        def goSrcPath = goPathTemplate.toString()
-
         // Generate path to the protos folder
-        def protoText = '${insertPath}/protos'
+        def protoText = '${insertPath}'
         def protoBinding = ["insertPath":path]
         def protoTemplate = engine.createTemplate(protoText).make(protoBinding)
         def protoPath = protoTemplate.toString()
 
         // Path to the generated swagger file
-        def jsonText = '${insertPath}/go/src/generated/apidocs.swagger.json'
+        def jsonText = '${insertPath}/generated/apidocs.swagger.json'
         def jsonBinding = ["insertPath":path]
         def jsonTemplate = engine.createTemplate(jsonText).make(jsonBinding)
         def jsonPath = jsonTemplate.toString()
 
         // Path to the "generated" folder inside go/src to store .swagger file
-        def generateFolderText = '${insertPath}/go/src/generated'
+        def generateFolderText = '${insertPath}/generated'
         def generateFolderBinding = ["insertPath":path]
         def generateFolderTemplate = engine.createTemplate(generateFolderText).make(generateFolderBinding)
         def generateFolderPath = generateFolderTemplate.toString()
@@ -76,19 +77,22 @@ public class SwaggerCodegenTask extends DefaultTask {
         // project.exec does not recognize the outputPath which is defined outside of this method
         def outputFolderPath = outputPath
 
+        // project.exec does not recognize the generateUnboundMethods which is defined outside of this method
+        def isGenerateUnboundMethods = generateUnboundMethods
+
         // Generate the swagger file (OpenAPI) first
         project.exec {
-            workingDir(goSrcPath)
+            workingDir('src/main/resources')
 
             // We will use a list to add all the necessary arguments
             List<String> arguments = new ArrayList<>()
 
-            // MIGHT NOT WORK FOR MAC OS BECAUSE OF /c
+            // MIGHT NOT WORK FOR MAC OS BECAUSE OF "/c"
             arguments.add('cmd');
             arguments.add('/c');
-            arguments.add('protoc');
+            arguments.add('protoc.exe');
             arguments.add('--openapiv2_out');
-            arguments.add('./generated');
+            arguments.add(generateFolderPath);
             arguments.add('--openapiv2_opt');
             arguments.add('logtostderr=true');
             arguments.add('--openapiv2_opt');
@@ -97,8 +101,14 @@ public class SwaggerCodegenTask extends DefaultTask {
             arguments.add('simple_operation_ids=true')
             arguments.add('--openapiv2_opt');
             arguments.add('include_package_in_tags=true')
+
+            // If selected, generate methods without HTTP annotations
+            if ( isGenerateUnboundMethods ) {
+                arguments.add('--openapiv2_opt');
+                arguments.add('generate_unbound_methods=true')
+            }
             arguments.add('--proto_path');
-            arguments.add('../../protos');
+            arguments.add(protoPath);
 
             // Pick all the .proto files under the com/carbonhealth directory
             FileTree tree = project.fileTree(protoPath).include('**/com/carbonhealth/**')
