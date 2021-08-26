@@ -1,3 +1,3 @@
 # gradle-script
 
-This project allows you to automate the process Protobuf -> OpenAPI -> Server Stubs
+This groovy project allows you to automate the process Protobuf -> OpenAPI -> Server Stubs
