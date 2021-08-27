@@ -87,9 +87,11 @@ public class SwaggerCodegenTask extends DefaultTask {
             // We will use a list to add all the necessary arguments
             List<String> arguments = new ArrayList<>()
 
-            // MIGHT NOT WORK FOR MAC OS BECAUSE OF "/c"
-            arguments.add('cmd');
-            arguments.add('/c');
+            // To make it work for windows
+            if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
+                arguments.add('cmd');
+                arguments.add('/c');
+            }
             arguments.add('protoc.exe');
             arguments.add('--openapiv2_out');
             arguments.add(generateFolderPath);
