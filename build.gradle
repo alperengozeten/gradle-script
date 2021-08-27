@@ -26,6 +26,7 @@ dependencies {
     tool ("com.carbonhealth.foundations:armeriacodegen:1.0-SNAPSHOT")
 }
 
+/**
 // THIS CLASS IS NOT IN USE!!! Only for testing purposes
 public class SwaggerCodegenTask extends DefaultTask {
 
@@ -70,8 +71,6 @@ public class SwaggerCodegenTask extends DefaultTask {
         def protoTemplate = engine.createTemplate(protoText).make(protoBinding)
         def protoPath = protoTemplate.toString()
 
-        /**
-
          // Generated output path for kotlin
          def kotlinGenerateText = '${insertDirPath}/generated/kotlin'
          def kotlinGenerateBinding = ["insertDirPath":project.projectDir.path]
@@ -83,7 +82,6 @@ public class SwaggerCodegenTask extends DefaultTask {
          def javaGenerateBinding = ["insertDirPath":project.projectDir.path]
          def javaGenerateTemplate = engine.createTemplate(javaGenerateText).make(javaGenerateBinding)
          def javaGeneratePath = javaGenerateTemplate.toString()
-         */
 
         // Path to the generated swagger file
         def jsonPath = './go/src/generated/apidocs.swagger.json'
@@ -130,9 +128,12 @@ public class SwaggerCodegenTask extends DefaultTask {
             arguments.add('--proto_path');
             arguments.add('C:/Users/HP/protos');
 
-            // Pick all the .proto files under the com/carbonhealth directory
-            FileTree tree = project.fileTree(protoPath).include('**/com/carbonhealth/**')
+            */
 
+            // Pick all the .proto files under the com/carbonhealth directory
+            //FileTree tree = project.fileTree(protoPath).include('**/com/carbonhealth/**')
+
+            /**
             // Add them to the arguments list
             tree.each {aFile ->
 
@@ -161,7 +162,6 @@ public class SwaggerCodegenTask extends DefaultTask {
             //println(getArgs().toString())
         }
 
-        /**
         // If the language is kotlin
         if ( language.toLowerCase() == "kotlin" ) {
             project.exec {
@@ -186,7 +186,6 @@ public class SwaggerCodegenTask extends DefaultTask {
         else {
             println('Select "java" or "kotlin" as --language')
         }
-         */
     }
 }
 
@@ -200,6 +199,7 @@ public class GeneratePlugin implements Plugin<Project> {
 
 apply plugin : GeneratePlugin
 
+ */
 
 gradlePlugin {
     plugins {
