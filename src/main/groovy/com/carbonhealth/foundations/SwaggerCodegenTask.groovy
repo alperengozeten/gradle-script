@@ -25,7 +25,7 @@ public class SwaggerCodegenTask extends DefaultTask {
         this.language = language;
     }
 
-    // Path to the main repo
+    // Path to the protos folder
     @Option(option = "protos_path", description = "The path to the protos folder (including the folder name).")
     public void setPath(String path) {
         this.path = path;
